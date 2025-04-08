@@ -54,72 +54,71 @@ public static class DbSeeder
             context.SaveChanges();
         }
 
-        if (!context.Events.Any())
+        var location1 = context.Locations.First();
+        var location2 = context.Locations.Skip(1).First();
+        var location3 = context.Locations.Skip(2).First();
+
+        var today = DateTime.UtcNow.Date;
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + 1); // Monday start
+
+        var event1 = new Event
         {
-            var location1 = context.Locations.First();
-var location2 = context.Locations.Skip(1).First();
-var location3 = context.Locations.Skip(2).First();
+            Title = "Sunset Beach Party",
+            Description = "Live DJ and cocktails on the beach!",
+            Date = startOfWeek.AddDays(0).AddHours(18), // Monday 18:00
+            LocationId = location1.Id,
+            CategoryId = context.EventCategories.First().Id,
+            CreatedByUserId = context.Users.First().Id
+        };
 
-var event1 = new Event
-{
-    Title = "Sunset Beach Party",
-    Description = "Live DJ and cocktails on the beach!",
-    Date = DateTime.UtcNow.AddDays(1),
-    LocationId = location1.Id,
-    CategoryId = context.EventCategories.First().Id,
-    CreatedByUserId = context.Users.First().Id
-};
+        var event2 = new Event
+        {
+            Title = "Morning Yoga",
+            Description = "Start your day with peaceful yoga in the garden.",
+            Date = startOfWeek.AddDays(2).AddHours(8), // Wednesday 08:00
+            LocationId = location2.Id,
+            CategoryId = context.EventCategories.Skip(1).First().Id,
+            CreatedByUserId = context.Users.Skip(1).First().Id
+        };
 
-var event2 = new Event
-{
-    Title = "Morning Yoga",
-    Description = "Start your day with peaceful yoga in the garden.",
-    Date = DateTime.UtcNow.AddDays(2),
-    LocationId = location2.Id,
-    CategoryId = context.EventCategories.Skip(1).First().Id,
-    CreatedByUserId = context.Users.Skip(1).First().Id
-};
+        var event3 = new Event
+        {
+            Title = "Business Mixer",
+            Description = "Meet local entrepreneurs and expats.",
+            Date = startOfWeek.AddDays(4).AddHours(19), // Friday 19:00
+            LocationId = location3.Id,
+            CategoryId = context.EventCategories.Skip(2).First().Id,
+            CreatedByUserId = context.Users.Skip(2).First().Id
+        };
 
-var event3 = new Event
-{
-    Title = "Business Mixer",
-    Description = "Meet local entrepreneurs and expats.",
-    Date = DateTime.UtcNow.AddDays(3),
-    LocationId = location3.Id,
-    CategoryId = context.EventCategories.Skip(2).First().Id,
-    CreatedByUserId = context.Users.Skip(2).First().Id
-};
+        context.Events.AddRange(event1, event2, event3);
+        context.SaveChanges();
 
+        // Tagowanie eventów
+        var tag1 = context.Tags.First();
+        var tag2 = context.Tags.Skip(1).First();
+        var tag3 = context.Tags.Skip(2).First();
 
-            context.Events.AddRange(event1, event2, event3);
-            context.SaveChanges();
+        context.EventTags.AddRange(
+            new EventTag { EventId = event1.Id, TagId = tag2.Id },
+            new EventTag { EventId = event2.Id, TagId = tag3.Id },
+            new EventTag { EventId = event3.Id, TagId = tag1.Id }
+        );
 
-            // Tagowanie eventów
-            var tag1 = context.Tags.First();
-            var tag2 = context.Tags.Skip(1).First();
-            var tag3 = context.Tags.Skip(2).First();
+        // Dodanie zdjęć
+        context.EventPhotos.AddRange(
+            new EventPhoto { EventId = event1.Id, Url = "https://example.com/beach.jpg" },
+            new EventPhoto { EventId = event2.Id, Url = "https://example.com/yoga.jpg" },
+            new EventPhoto { EventId = event3.Id, Url = "https://example.com/mixer.jpg" }
+        );
 
-            context.EventTags.AddRange(
-                new EventTag { EventId = event1.Id, TagId = tag2.Id },
-                new EventTag { EventId = event2.Id, TagId = tag3.Id },
-                new EventTag { EventId = event3.Id, TagId = tag1.Id }
-            );
+        // Ulubione eventy
+        var user1 = context.Users.First();
+        context.FavoriteEvents.AddRange(
+            new FavoriteEvent { UserId = user1.Id, EventId = event1.Id },
+            new FavoriteEvent { UserId = user1.Id, EventId = event2.Id }
+        );
 
-            // Dodanie zdjęć
-            context.EventPhotos.AddRange(
-                new EventPhoto { EventId = event1.Id, Url = "https://example.com/beach.jpg" },
-                new EventPhoto { EventId = event2.Id, Url = "https://example.com/yoga.jpg" },
-                new EventPhoto { EventId = event3.Id, Url = "https://example.com/mixer.jpg" }
-            );
-
-            // Ulubione eventy
-            var user1 = context.Users.First();
-            context.FavoriteEvents.AddRange(
-                new FavoriteEvent { UserId = user1.Id, EventId = event1.Id },
-                new FavoriteEvent { UserId = user1.Id, EventId = event2.Id }
-            );
-
-            context.SaveChanges();
-        }
+        context.SaveChanges();
     }
 }
