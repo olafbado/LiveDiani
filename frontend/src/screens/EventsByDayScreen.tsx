@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
   eventList: {
     paddingHorizontal: 16,
     paddingBottom: 16,
+    marginTop: 12,
   },
   card: {
     backgroundColor: Colors.cardBackground,
