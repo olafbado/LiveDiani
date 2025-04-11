@@ -24,7 +24,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
+        screenOptions={({ route }: { route: { name: string } }) => ({
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: Colors.muted,
           headerShown: false,
@@ -32,7 +32,7 @@ export default function AppNavigator() {
             backgroundColor: Colors.cardBackground,
             borderTopColor: Colors.background,
           },
-          tabBarIcon: ({ color, size }) => {
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => {
             let iconName = 'home';
             if (route.name === 'Home') iconName = 'home';
             if (route.name === 'Details') iconName = 'information-circle';
