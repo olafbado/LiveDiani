@@ -7,4 +7,6 @@ public class EventPhoto
 
     public int EventId { get; set; }
     public Event Event { get; set; } = null!;
+
+    public bool IsMain { get; set; }
 }
