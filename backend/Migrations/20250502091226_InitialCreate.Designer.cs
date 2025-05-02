@@ -12,8 +12,8 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250331172637_InitialFullSchema")]
-    partial class InitialFullSchema
+    [Migration("20250502091226_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -92,6 +92,9 @@ namespace backend.Migrations
                     b.Property<int>("EventId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsMain")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("text");
@@ -126,9 +129,14 @@ namespace backend.Migrations
                     b.Property<int>("EventId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("EventId1")
+                        .HasColumnType("integer");
+
                     b.HasKey("UserId", "EventId");
 
                     b.HasIndex("EventId");
+
+                    b.HasIndex("EventId1");
 
                     b.ToTable("FavoriteEvents");
                 });
@@ -262,6 +270,10 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("backend.Models.Event", null)
+                        .WithMany("FavoritedBy")
+                        .HasForeignKey("EventId1");
+
                     b.HasOne("backend.Models.User", "User")
                         .WithMany("FavoriteEvents")
                         .HasForeignKey("UserId")
@@ -276,6 +288,8 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Models.Event", b =>
                 {
                     b.Navigation("EventTags");
+
+                    b.Navigation("FavoritedBy");
 
                     b.Navigation("Photos");
                 });
