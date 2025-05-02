@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import {  useState } from 'react';
 import {
   View,
@@ -29,22 +29,20 @@ export default function HomeScreen() {
 
  
 
-useFocusEffect(
-  useCallback(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await api.get('/events');
-        setEvents(res.data);
-      } catch (err) {
-        console.error('Failed to load events:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, [])
-);
+useEffect(() => {
+  const fetchEvents = async () => {
+    try {
+      const res = await api.get('/events');
+      console.log('Fetched:', res.data); // sprawdź, czy to tablica
+      setEvents(res.data); // ✅ poprawnie ustaw dane
+    } catch (err) {
+      console.error('Failed to load events:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchEvents();
+}, []);
 
 
   const weekDays = eachDayOfInterval({
