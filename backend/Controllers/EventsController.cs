@@ -1,81 +1,135 @@
-// Dzięki using możesz korzystać z klas i funkcji z innych bibliotek bez pisania pełnej ścieżki.
 using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
+using backend.Dtos;
 
-// Dzieki namespace moge organizowac klasy w inne namespacy nawet jesli maja te same nazwy,
-// potem moge je zaimportowac uzywajac "using" dzieki czemu moge uzyc
-// `Event newEvent =  new Event()`; zamiast `backend.Models.Event newEvent = new backend.Models.Event();`
 namespace backend.Controllers;
 
-// 🔧 Atrybut informujący, że to kontroler API (automatyczna walidacja, 400 itd.)
 [ApiController]
-
-// 📍 Routing endpointów np. api/events
 [Route("api/[controller]")]
-// Framework tworzy mapping: GET /api/events → EventsController.GetEvents()
 public class EventsController : ControllerBase
 {
-    // 💾 Pole do komunikacji z bazą danych
     private readonly AppDbContext _context;
 
-    // 🔨 Konstruktor z wstrzykiwaniem zależności (dependency injection)
     public EventsController(AppDbContext context)
     {
         _context = context;
     }
 
-    // 📘 GET: /api/events
-    // Zwraca wszystkie eventy z bazy
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<EventDto>>> GetEvents()
     {
-        return await _context.Events.ToListAsync();
+        var events = await _context.Events
+            .Include(e => e.EventTags!)
+            .ThenInclude(et => et.Tag)
+            .Include(e => e.Location)
+            .Include(e => e.Category)
+            .ToListAsync();
+
+        var eventDtos = events.Select(e => new EventDto
+        {
+            Id = e.Id,
+            Title = e.Title,
+            Date = e.Date,
+            Description = e.Description,
+            LocationId = e.LocationId,
+            CategoryId = e.CategoryId,
+            TagIds = e.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>(),
+        });
+
+        return Ok(eventDtos);
     }
 
-    // 📘 GET: /api/events/{id}
-    // Zwraca szczegóły konkretnego eventu po ID
+
     [HttpGet("{id}")]
     public async Task<ActionResult<Event>> GetEvent(int id)
     {
-        var ev = await _context.Events.FindAsync(id);
-        if (ev == null) return NotFound(); // 404 jeśli nie znaleziono
-        return ev; // 200 OK + dane eventu
+        var ev = await _context.Events
+            .Include(e => e.EventTags)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (ev == null) return NotFound();
+        return ev;
     }
 
-    // 🟢 POST: /api/events
-    // Tworzy nowy event
     [HttpPost]
-    public async Task<ActionResult<Event>> CreateEvent(Event ev)
+    public async Task<ActionResult<Event>> CreateEvent(EventDto dto)
     {
-        _context.Events.Add(ev); // dodajemy nowy obiekt do kontekstu
-        await _context.SaveChangesAsync(); // zapisujemy do bazy
-        return CreatedAtAction(nameof(GetEvent), new { id = ev.Id }, ev); // zwracamy 201 Created
+        Console.WriteLine("Received tagIds: " + string.Join(", ", dto.TagIds));
+        var ev = new Event
+        {
+            Title = dto.Title,
+            Description = dto.Description,
+            Date = dto.Date,
+            LocationId = dto.LocationId,
+            CategoryId = dto.CategoryId,
+            CreatedByUserId = dto.CreatedByUserId,
+            EventTags = new List<EventTag>() // dodaj pustą listę i ręcznie powiąż tagi
+        };
+
+        foreach (var tagId in dto.TagIds)
+        {
+            ev.EventTags.Add(new EventTag
+            {
+                TagId = tagId,
+                Event = ev // <== to jest KLUCZOWE, żeby EF wiedział o relacji
+            });
+        }
+
+        _context.Events.Add(ev);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetEvent), new { id = ev.Id }, ev);
     }
 
-    // 🟡 PUT: /api/events/{id}
-    // Aktualizuje istniejący event
+
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateEvent(int id, Event ev)
+    public async Task<IActionResult> UpdateEvent(int id, EventDto dto)
     {
-        if (id != ev.Id) return BadRequest(); // ID z URL musi się zgadzać z ID w obiekcie
+        if (id != dto.Id) return BadRequest("ID mismatch");
 
-        _context.Entry(ev).State = EntityState.Modified; // oznaczamy obiekt jako zmodyfikowany
-        await _context.SaveChangesAsync(); // zapisujemy zmiany
-        return NoContent(); // 204 No Content – operacja się powiodła, ale nic nie zwracamy
+        var ev = await _context.Events
+            .Include(e => e.EventTags)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (ev == null) return NotFound();
+
+        ev.Title = dto.Title;
+        ev.Description = dto.Description;
+        ev.Date = dto.Date;
+        ev.LocationId = dto.LocationId;
+        ev.CategoryId = dto.CategoryId;
+        ev.CreatedByUserId = dto.CreatedByUserId;
+
+        // Usuń stare tagi
+        _context.EventTags.RemoveRange(ev.EventTags ?? Enumerable.Empty<EventTag>());
+
+
+        // Dodaj nowe tagi
+        ev.EventTags = dto.TagIds.Select(tagId => new EventTag
+        {
+            TagId = tagId,
+            EventId = id
+        }).ToList();
+
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
-    // 🔴 DELETE: /api/events/{id}
-    // Usuwa event z bazy
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEvent(int id)
     {
-        var ev = await _context.Events.FindAsync(id);
-        if (ev == null) return NotFound(); // jeśli nie znaleziono – 404
+        var ev = await _context.Events
+            .Include(e => e.EventTags)
+            .FirstOrDefaultAsync(e => e.Id == id);
 
-        _context.Events.Remove(ev); // usuwamy obiekt
-        await _context.SaveChangesAsync(); // zapisujemy zmiany
-        return NoContent(); // 204 No Content
+        if (ev == null) return NotFound();
+
+        _context.EventTags.RemoveRange(ev.EventTags ?? Enumerable.Empty<EventTag>());
+        _context.Events.Remove(ev);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 }
