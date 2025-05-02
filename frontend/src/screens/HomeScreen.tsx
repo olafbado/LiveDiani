@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import {  useState } from 'react';
 import {
   View,
   Text,
@@ -25,7 +27,10 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<any>();
 
-  useEffect(() => {
+ 
+
+useFocusEffect(
+  useCallback(() => {
     const fetchEvents = async () => {
       try {
         const res = await api.get('/events');
@@ -36,8 +41,11 @@ export default function HomeScreen() {
         setLoading(false);
       }
     };
+
     fetchEvents();
-  }, []);
+  }, [])
+);
+
 
   const weekDays = eachDayOfInterval({
     start: startOfWeek(new Date(), { weekStartsOn: 1 }),
