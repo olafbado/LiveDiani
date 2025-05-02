@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
@@ -26,7 +26,8 @@ public class TagsController : ControllerBase
     public async Task<ActionResult<Tag>> GetTag(int id)
     {
         var tag = await _context.Tags.FindAsync(id);
-        if (tag == null) return NotFound();
+        if (tag == null)
+            return NotFound();
         return tag;
     }
 
@@ -41,7 +42,8 @@ public class TagsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTag(int id, Tag tag)
     {
-        if (id != tag.Id) return BadRequest();
+        if (id != tag.Id)
+            return BadRequest();
         _context.Entry(tag).State = EntityState.Modified;
         await _context.SaveChangesAsync();
         return NoContent();
@@ -52,7 +54,8 @@ public class TagsController : ControllerBase
     {
         Console.WriteLine($"Deleting tag with ID: {id}");
         var tag = await _context.Tags.FindAsync(id);
-        if (tag == null) return NotFound();
+        if (tag == null)
+            return NotFound();
 
         _context.Tags.Remove(tag);
         await _context.SaveChangesAsync();

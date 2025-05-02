@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
@@ -26,7 +26,8 @@ public class EventCategoriesController : ControllerBase
     public async Task<ActionResult<EventCategory>> GetCategory(int id)
     {
         var category = await _context.EventCategories.FindAsync(id);
-        if (category == null) return NotFound();
+        if (category == null)
+            return NotFound();
         return category;
     }
 
@@ -41,7 +42,8 @@ public class EventCategoriesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCategory(int id, EventCategory category)
     {
-        if (id != category.Id) return BadRequest();
+        if (id != category.Id)
+            return BadRequest();
         _context.Entry(category).State = EntityState.Modified;
         await _context.SaveChangesAsync();
         return NoContent();
@@ -51,7 +53,8 @@ public class EventCategoriesController : ControllerBase
     public async Task<IActionResult> DeleteCategory(int id)
     {
         var category = await _context.EventCategories.FindAsync(id);
-        if (category == null) return NotFound();
+        if (category == null)
+            return NotFound();
         _context.EventCategories.Remove(category);
         await _context.SaveChangesAsync();
         return NoContent();

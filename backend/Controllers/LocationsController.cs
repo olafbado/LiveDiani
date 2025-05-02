@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using backend.Data;
 using backend.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
@@ -26,7 +26,8 @@ public class LocationsController : ControllerBase
     public async Task<ActionResult<Location>> GetLocation(int id)
     {
         var loc = await _context.Locations.FindAsync(id);
-        if (loc == null) return NotFound();
+        if (loc == null)
+            return NotFound();
         return loc;
     }
 
@@ -41,7 +42,8 @@ public class LocationsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateLocation(int id, Location loc)
     {
-        if (id != loc.Id) return BadRequest();
+        if (id != loc.Id)
+            return BadRequest();
         _context.Entry(loc).State = EntityState.Modified;
         await _context.SaveChangesAsync();
         return NoContent();
@@ -51,7 +53,8 @@ public class LocationsController : ControllerBase
     public async Task<IActionResult> DeleteLocation(int id)
     {
         var loc = await _context.Locations.FindAsync(id);
-        if (loc == null) return NotFound();
+        if (loc == null)
+            return NotFound();
         _context.Locations.Remove(loc);
         await _context.SaveChangesAsync();
         return NoContent();
