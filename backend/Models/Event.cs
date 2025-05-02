@@ -6,7 +6,7 @@ public class Event
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public DateTime Date { get; set; }
-    
+
     public int LocationId { get; set; }
     public Location? Location { get; set; }
 
@@ -18,4 +18,6 @@ public class Event
 
     public int? CreatedByUserId { get; set; }
     public User? CreatedByUser { get; set; }
+
+    public ICollection<FavoriteEvent>? FavoritedBy { get; set; }
 }
