@@ -1,13 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Colors from '../../constants/colors';
 import api from '../../api/axios';
@@ -41,6 +33,10 @@ export default function EventFormScreen() {
       setLocationId(String(existingEvent.locationId));
       setCategoryId(String(existingEvent.categoryId));
       setUserId(String(existingEvent.createdByUserId));
+
+      if (existingEvent.tagIds) {
+        setSelectedTagIds(existingEvent.tagIds);
+      }
     }
 
     const fetchData = async () => {
@@ -51,11 +47,6 @@ export default function EventFormScreen() {
         setLocations(locs.data);
         setCategories(cats.data);
         setTags(tgs.data);
-
-        if (existingEvent?.eventTags) {
-          const ids = existingEvent.eventTags.map((et: any) => et.tagId);
-          setSelectedTagIds(ids);
-        }
       } catch (err) {
         console.error('Fetch error:', err);
       }
@@ -66,7 +57,7 @@ export default function EventFormScreen() {
 
   const toggleTag = (tagId: number) => {
     setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
     );
   };
 
@@ -75,8 +66,6 @@ export default function EventFormScreen() {
       Alert.alert('Validation', 'Please fill all required fields');
       return;
     }
-
-    
 
     const payload = {
       title,
@@ -118,9 +107,7 @@ export default function EventFormScreen() {
 
       <Text style={styles.label}>Date</Text>
       <TouchableOpacity style={styles.input} onPress={() => setShowPicker(true)}>
-        <Text style={{ color: Colors.text }}>
-          {format(pickedDate, 'yyyy-MM-dd')}
-        </Text>
+        <Text style={{ color: Colors.text }}>{format(pickedDate, 'yyyy-MM-dd')}</Text>
       </TouchableOpacity>
 
       {showPicker && (
@@ -136,11 +123,7 @@ export default function EventFormScreen() {
       )}
 
       <Text style={styles.label}>Location</Text>
-      <Picker
-        selectedValue={locationId}
-        onValueChange={setLocationId}
-        style={styles.input}
-      >
+      <Picker selectedValue={locationId} onValueChange={setLocationId} style={styles.input}>
         <Picker.Item label="-- Select Location --" value="" />
         {locations.map((loc) => (
           <Picker.Item key={loc.id} label={loc.name} value={String(loc.id)} />
@@ -148,11 +131,7 @@ export default function EventFormScreen() {
       </Picker>
 
       <Text style={styles.label}>Category</Text>
-      <Picker
-        selectedValue={categoryId}
-        onValueChange={setCategoryId}
-        style={styles.input}
-      >
+      <Picker selectedValue={categoryId} onValueChange={setCategoryId} style={styles.input}>
         <Picker.Item label="-- Select Category --" value="" />
         {categories.map((cat) => (
           <Picker.Item key={cat.id} label={cat.name} value={String(cat.id)} />
@@ -164,17 +143,11 @@ export default function EventFormScreen() {
         {tags.map((tag) => (
           <TouchableOpacity
             key={tag.id}
-            style={[
-              styles.tagButton,
-              selectedTagIds.includes(tag.id) && styles.tagSelected,
-            ]}
+            style={[styles.tagButton, selectedTagIds.includes(tag.id) && styles.tagSelected]}
             onPress={() => toggleTag(tag.id)}
           >
             <Text
-              style={[
-                styles.tagText,
-                selectedTagIds.includes(tag.id) && styles.tagTextSelected,
-              ]}
+              style={[styles.tagText, selectedTagIds.includes(tag.id) && styles.tagTextSelected]}
             >
               {tag.name}
             </Text>
@@ -183,9 +156,7 @@ export default function EventFormScreen() {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>
-          {existingEvent ? 'Update Event' : 'Create Event'}
-        </Text>
+        <Text style={styles.buttonText}>{existingEvent ? 'Update Event' : 'Create Event'}</Text>
       </TouchableOpacity>
     </View>
   );
