@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+  FlatList,
+} from 'react-native';
 import Colors from '../../constants/colors';
 import api from '../../api/axios';
 import { useNavigation } from '@react-navigation/native';
@@ -11,33 +19,32 @@ export default function ManageTagsScreen() {
   const [tags, setTags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<any>();
-useFocusEffect(
-  useCallback(() => {
-    const fetchTags = async () => {
-      try {
-        const res = await api.get('/tags');
-        setTags(res.data);
-      } catch (err) {
-        console.error('Failed to load tags:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTags();
-  }, [])
-);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchTags = async () => {
+        try {
+          const res = await api.get('/tags');
+          setTags(res.data);
+        } catch (err) {
+          console.error('Failed to load tags:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchTags();
+    }, []),
+  );
 
-const handleDelete = async (id: number) => {
-  console.log('Deleting tag ID:', id);
+  const handleDelete = async (id: number) => {
+    console.log('Deleting tag ID:', id);
 
-  try {
-    await api.delete(`/tags/${id}`);
-    setTags((prev) => prev.filter((tag) => tag.id !== id));
-  } catch (err) {
-    console.error('Delete failed:', err);
-  }
-};
-
+    try {
+      await api.delete(`/tags/${id}`);
+      setTags((prev) => prev.filter((tag) => tag.id !== id));
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.item}>
@@ -47,9 +54,8 @@ const handleDelete = async (id: number) => {
           <Ionicons name="pencil" size={20} color={Colors.secondary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={{ marginLeft: 16 }}>
-  <Ionicons name="trash" size={20} color={Colors.danger} />
-</TouchableOpacity>
-
+          <Ionicons name="trash" size={20} color={Colors.danger} />
+        </TouchableOpacity>
       </View>
     </View>
   );

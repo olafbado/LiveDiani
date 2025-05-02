@@ -18,11 +18,7 @@ export default function EventCard({ title, date, location, category, onPress }: 
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.info}>{date}</Text>
       <Text style={styles.info}>{location}</Text>
-      {category && (
-        <Text style={[styles.category, { color: categoryColor }]}>
-          {category}
-        </Text>
-      )}
+      {category && <Text style={[styles.category, { color: categoryColor }]}>{category}</Text>}
     </TouchableOpacity>
   );
 }

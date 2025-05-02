@@ -1,6 +1,13 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../constants/colors';
 import api from '../../api/axios';
@@ -24,7 +31,7 @@ export default function ManageEventsScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchEvents();
-    }, [])
+    }, []),
   );
 
   const handleDelete = async (id: number) => {

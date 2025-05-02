@@ -15,8 +15,16 @@ function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="HomeMain" component={HomeScreen} options={{ title: 'Home' }} />
-      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ title: 'Details' }} />
-      <Stack.Screen name="EventsByDay" component={EventsByDayScreen} options={{ title: 'Events by Day' }} />
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetailsScreen}
+        options={{ title: 'Details' }}
+      />
+      <Stack.Screen
+        name="EventsByDay"
+        component={EventsByDayScreen}
+        options={{ title: 'Events by Day' }}
+      />
     </Stack.Navigator>
   );
 }
@@ -43,14 +51,12 @@ export default function AppNavigator() {
       >
         <Tab.Screen name="Home" component={HomeStack} />
         <Tab.Screen
-  name="Manage"
-  component={ManageStack}
-  options={{
-    tabBarIcon: ({ color, size }) => (
-      <Ionicons name="settings" size={size} color={color} />
-    ),
-  }}
-/>
+          name="Manage"
+          component={ManageStack}
+          options={{
+            tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );

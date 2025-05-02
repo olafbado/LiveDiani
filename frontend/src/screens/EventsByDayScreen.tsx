@@ -33,7 +33,7 @@ export default function EventsByDayScreen() {
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const initialIndex = Math.min(
     6,
-    Math.max(0, differenceInCalendarDays(new Date(selectedDate), weekStart))
+    Math.max(0, differenceInCalendarDays(new Date(selectedDate), weekStart)),
   );
   const [selectedIndex, setSelectedIndex] = useState(initialIndex);
 
@@ -53,9 +53,7 @@ export default function EventsByDayScreen() {
     fetchEvents();
   }, []);
 
-  const filteredEvents = events.filter((ev) =>
-    isSameDay(parseISO(ev.date), activeDate)
-  );
+  const filteredEvents = events.filter((ev) => isSameDay(parseISO(ev.date), activeDate));
 
   const formattedTitle = format(activeDate, 'EEEE, d MMM', { locale: enUS });
 
@@ -77,15 +75,11 @@ export default function EventsByDayScreen() {
             <TouchableOpacity
               key={event.id}
               style={styles.card}
-              onPress={() =>
-                navigation.navigate('EventDetails', { eventId: event.id })
-              }
+              onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
             >
               <Image
                 source={{
-                  uri:
-                    event.photos?.[0]?.url ||
-                    'https://source.unsplash.com/400x200/?event',
+                  uri: event.photos?.[0]?.url || 'https://source.unsplash.com/400x200/?event',
                 }}
                 style={styles.image}
               />

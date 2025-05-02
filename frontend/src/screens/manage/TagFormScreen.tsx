@@ -49,9 +49,7 @@ export default function TagFormScreen() {
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>
-          {existingTag ? 'Update Tag' : 'Create Tag'}
-        </Text>
+        <Text style={styles.buttonText}>{existingTag ? 'Update Tag' : 'Create Tag'}</Text>
       </TouchableOpacity>
     </View>
   );
