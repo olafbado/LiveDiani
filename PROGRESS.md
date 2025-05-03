@@ -6,7 +6,7 @@ LiveDiani is a web application for managing and discovering events in Diani. The
 ## Project Requirements
 
 ### Core Requirements
-1. ✅ CRUD operations for 8 classes (Currently 5/8 implemented)
+1. ✅ CRUD operations for 8 classes (8/8 implemented)
 2. ✅ Minimum 2 classes with foreign keys and handling
 3. ✅ Minimum 1 class with many-to-many relationship and handling
 4. ⚠️ Additional elements (Image upload implemented, more needed)
@@ -20,6 +20,9 @@ LiveDiani is a web application for managing and discovering events in Diani. The
   - Event photos management (CRD)
   - Locations management (CRUD)
   - Tags management (CRUD)
+  - User management (CRUD)
+  - Favorite events management (CRUD)
+  - EventTag management (CRUD)
   - Database seeding with sample data
   - Many-to-many relationship between Events and Tags
 
@@ -30,9 +33,6 @@ LiveDiani is a web application for managing and discovering events in Diani. The
 
 ### Missing Features
 - **Backend API**:
-  - User management (CRUD)
-  - Favorite events management (CRUD)
-  - EventTag direct management (though handled through Events)
   - Authentication and authorization
 
 - **Frontend**:
@@ -60,6 +60,9 @@ LiveDiani is a web application for managing and discovering events in Diani. The
   - EventPhotosController.cs
   - LocationsController.cs
   - TagsController.cs
+  - UsersController.cs
+  - FavoriteEventsController.cs
+  - EventTagsController.cs
 
 - **Data**:
   - AppDbContext.cs
@@ -78,9 +81,10 @@ LiveDiani is a web application for managing and discovering events in Diani. The
 ## TODO List
 
 ### High Priority
-1. Implement missing controllers:
-   - UsersController
-   - FavoriteEventsController
+1. ✅ Implement missing controllers:
+   - ✅ UsersController
+   - ✅ FavoriteEventsController
+   - ✅ EventTagsController
 
 2. Add authentication and authorization:
    - JWT authentication
@@ -115,3 +119,4 @@ LiveDiani is a web application for managing and discovering events in Diani. The
 
 ## Progress Updates
 - **2025-05-03**: Project analysis completed, created progress tracking branch and PROGRESS.md
+- **2025-05-03**: Implemented missing controllers (UsersController, FavoriteEventsController, EventTagsController) to fulfill the requirement of having CRUD operations for 8 classes
