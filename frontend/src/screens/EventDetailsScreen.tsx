@@ -1,8 +1,18 @@
-import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  FlatList,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import Colors from '../constants/colors';
 import api from '../api/axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { parseISO, format } from 'date-fns';
 
 export default function EventDetailsScreen() {
@@ -12,6 +22,9 @@ export default function EventDetailsScreen() {
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const screenWidth = Dimensions.get('window').width;
+  const flatListRef = useRef<FlatList>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -28,6 +41,16 @@ export default function EventDetailsScreen() {
 
     fetchEvent();
   }, [eventId]);
+
+  const images = [
+    ...(event?.mainPhoto ? [event.mainPhoto] : []),
+    ...(event?.additionalPhotos || []),
+  ];
+
+  const scrollToIndex = (index: number) => {
+    flatListRef.current?.scrollToIndex({ index, animated: true });
+    setActiveIndex(index);
+  };
 
   if (loading) {
     return (
@@ -47,25 +70,52 @@ export default function EventDetailsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: Colors.background }}>
-      <Image
-        source={{
-          uri: event?.photos?.[0]?.url || 'https://source.unsplash.com/800x400/?event',
+      {/* Główne zdjęcie + slider */}
+      <FlatList
+        ref={flatListRef}
+        data={images}
+        horizontal
+        pagingEnabled
+        keyExtractor={(item, idx) => idx.toString()}
+        renderItem={({ item }) => (
+          <Image
+            source={{ uri: 'http://192.168.1.36:5084' + item.url }}
+            style={styles.sliderImage}
+          />
+        )}
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+          setActiveIndex(index);
         }}
-        style={{ width: '100%', height: 200 }}
       />
 
-      <View style={{ padding: 16, backgroundColor: Colors.cardBackground }}>
-        <Text style={styles.title}>{event.title}</Text>
-        <Text style={styles.date}>📅 {format(parseISO(event.date), 'dd MMM yyyy, HH:mm')}</Text>
-        <Text style={styles.location}>📍 {event.location?.name}</Text>
-        {event.price && <Text style={styles.price}>💰 {event.price}</Text>}
+      {/* Miniaturki */}
+      {images.length > 1 && (
+        <View style={styles.thumbnailRow}>
+          {images.map((img, idx) => (
+            <TouchableOpacity key={idx} onPress={() => scrollToIndex(idx)}>
+              <Image
+                source={{ uri: 'http://192.168.1.36:5084' + img.url }}
+                style={[styles.thumbnail, idx === activeIndex && styles.thumbnailSelected]}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
-        <Text style={styles.section}>Opis</Text>
+      {/* Szczegóły */}
+      <View style={styles.content}>
+        <Text style={styles.title}>{event.title}</Text>
+        <Text style={styles.detail}>📅 {format(parseISO(event.date), 'dd MMM yyyy, HH:mm')}</Text>
+        {event.location && <Text style={styles.detail}>📍 {event.location.name}</Text>}
+
+        <Text style={styles.section}>Description</Text>
         <Text style={styles.paragraph}>{event.description}</Text>
 
         {event.tags?.length > 0 && (
           <>
-            <Text style={styles.section}>Tagi</Text>
+            <Text style={styles.section}>Tags</Text>
             <View style={styles.tagContainer}>
               {event.tags.map((tag: any) => (
                 <Text key={tag.id} style={styles.tag}>
@@ -81,21 +131,67 @@ export default function EventDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: 'bold', color: Colors.text, marginBottom: 4 },
-  date: { fontSize: 14, color: Colors.muted },
-  location: { fontSize: 14, color: Colors.muted },
-  price: { fontSize: 14, color: Colors.text, marginBottom: 16 },
-  section: { fontSize: 16, fontWeight: '600', color: Colors.text, marginTop: 16, marginBottom: 6 },
-  paragraph: { fontSize: 14, color: Colors.text },
-  tagContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  sliderImage: {
+    width: Dimensions.get('window').width,
+    height: 240,
+    resizeMode: 'cover',
+  },
+  thumbnailRow: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  thumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  thumbnailSelected: {
+    borderColor: Colors.primary,
+  },
+  content: {
+    padding: 16,
+    backgroundColor: Colors.cardBackground,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  detail: {
+    fontSize: 14,
+    color: Colors.muted,
+    marginBottom: 4,
+  },
+  section: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+    marginTop: 20,
+    marginBottom: 6,
+  },
+  paragraph: {
+    fontSize: 14,
+    color: Colors.text,
+    lineHeight: 20,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   tag: {
     backgroundColor: Colors.secondary,
-    color: Colors.white,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
     fontSize: 12,
-    marginTop: 4,
+    marginRight: 6,
+    marginBottom: 6,
   },
   center: {
     flex: 1,

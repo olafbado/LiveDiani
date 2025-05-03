@@ -20,7 +20,7 @@ import {
   differenceInCalendarDays,
 } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
-import DaySlider from '../components/DaySlider';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function EventsByDayScreen() {
   const route = useRoute<any>();
@@ -40,17 +40,28 @@ export default function EventsByDayScreen() {
   const activeDate = addDays(weekStart, selectedIndex);
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchEvents = async () => {
       try {
         const res = await api.get('/events');
-        setEvents(res.data);
+        if (isActive) {
+          setEvents(res.data);
+        }
       } catch (err) {
         console.error('Error fetching events:', err);
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
+
     fetchEvents();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const filteredEvents = events.filter((ev) => isSameDay(parseISO(ev.date), activeDate));
@@ -61,7 +72,25 @@ export default function EventsByDayScreen() {
     <View style={styles.container}>
       <Text style={styles.header}>Events for {formattedTitle}</Text>
 
-      <DaySlider selected={selectedIndex} onSelect={setSelectedIndex} />
+      <View style={styles.daySelector}>
+        {Array.from({ length: 7 }).map((_, i) => {
+          const date = addDays(weekStart, i);
+          const label = format(date, 'EEE');
+          const isActive = i === selectedIndex;
+
+          return (
+            <TouchableOpacity
+              key={i}
+              onPress={() => setSelectedIndex(i)}
+              style={[styles.dayButton, isActive && styles.dayButtonActive]}
+            >
+              <Text style={[styles.dayButtonText, isActive && styles.dayButtonTextActive]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       {loading ? (
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -79,7 +108,7 @@ export default function EventsByDayScreen() {
             >
               <Image
                 source={{
-                  uri: event.photos?.[0]?.url || 'https://source.unsplash.com/400x200/?event',
+                  uri: 'http://192.168.1.36:5084' + event.mainPhoto?.url,
                 }}
                 style={styles.image}
               />
@@ -123,11 +152,40 @@ const styles = StyleSheet.create({
   image: {
     height: 160,
     width: '100%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
+
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.text,
     padding: 12,
+  },
+  daySelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+
+  dayButton: {
+    backgroundColor: Colors.cardBackground,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+
+  dayButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+
+  dayButtonText: {
+    color: Colors.text,
+    fontWeight: '500',
+  },
+
+  dayButtonTextActive: {
+    color: Colors.white,
   },
 });
