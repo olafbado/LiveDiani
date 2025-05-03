@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,21 +16,32 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 // 📦 Rejestrujemy kontrolery (np. EventsController, UsersController)
-builder.Services.AddControllers();
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System
+            .Text
+            .Json
+            .Serialization
+            .ReferenceHandler
+            .IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 // 🔗 Pobieramy connection string do bazy danych z appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // 🗄️ Rejestrujemy DbContext z PostgreSQL jako providerem
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
 // 🏗️ Budujemy aplikację na podstawie skonfigurowanego buildera
 var app = builder.Build();
@@ -53,12 +65,15 @@ app.MapControllers();
 // 🌱 Seedy – uruchamiane przy starcie aplikacji
 // - Tworzą bazę danych (migracje)
 // - Dodają przykładowe dane (jeśli nie istnieją)
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate(); // automatyczna migracja EF Core
-    DbSeeder.Seed(db);     // zasiewanie bazy danymi testowymi
+    DbSeeder.Seed(db); // zasiewanie bazy danymi testowymi
 }
 
 // ▶️ Startujemy aplikację – nasłuch na domyślnym porcie
+app.UseStaticFiles();
+app.MapControllers();
 app.Run();

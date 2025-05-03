@@ -6,117 +6,168 @@ public static class DbSeeder
 {
     public static void Seed(AppDbContext context)
     {
-        if (!context.Users.Any())
-        {
-            var users = new List<User>
-            {
-                new() { Username = "admin", Email = "admin@diani.com", Role = "admin" },
-                new() { Username = "organizer1", Email = "org1@diani.com", Role = "organizer" },
-                new() { Username = "user1", Email = "user1@diani.com", Role = "user" },
-            };
-            context.Users.AddRange(users);
-            context.SaveChanges();
-        }
-
-        if (!context.EventCategories.Any())
-        {
-            var categories = new List<EventCategory>
-            {
-                new() { Name = "Beach Party" },
-                new() { Name = "Yoga" },
-                new() { Name = "Networking" }
-            };
-            context.EventCategories.AddRange(categories);
-            context.SaveChanges();
-        }
-
-        if (!context.Tags.Any())
-        {
-            var tags = new List<Tag>
-            {
-                new() { Name = "Free" },
-                new() { Name = "Live Music" },
-                new() { Name = "Outdoor" }
-            };
-            context.Tags.AddRange(tags);
-            context.SaveChanges();
-        }
-
-        if (!context.Locations.Any())
-        {
-            var locations = new List<Location>
-            {
-                new() { Name = "Diani Beach Club", Address = "Main Road" },
-                new() { Name = "Yoga Garden", Address = "Forest Trail" },
-                new() { Name = "Seafront Café", Address = "Ocean Drive" }
-            };
-            context.Locations.AddRange(locations);
-            context.SaveChanges();
-        }
-
-        var location1 = context.Locations.First();
-        var location2 = context.Locations.Skip(1).First();
-        var location3 = context.Locations.Skip(2).First();
-
-        var today = DateTime.UtcNow.Date;
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + 1); // Monday start
-
-        var event1 = new Event
-        {
-            Title = "Sunset Beach Party",
-            Description = "Live DJ and cocktails on the beach!",
-            Date = startOfWeek.AddDays(0).AddHours(18), // Monday 18:00
-            LocationId = location1.Id,
-            CategoryId = context.EventCategories.First().Id,
-            CreatedByUserId = context.Users.First().Id
-        };
-
-        var event2 = new Event
-        {
-            Title = "Morning Yoga",
-            Description = "Start your day with peaceful yoga in the garden.",
-            Date = startOfWeek.AddDays(2).AddHours(8), // Wednesday 08:00
-            LocationId = location2.Id,
-            CategoryId = context.EventCategories.Skip(1).First().Id,
-            CreatedByUserId = context.Users.Skip(1).First().Id
-        };
-
-        var event3 = new Event
-        {
-            Title = "Business Mixer",
-            Description = "Meet local entrepreneurs and expats.",
-            Date = startOfWeek.AddDays(4).AddHours(19), // Friday 19:00
-            LocationId = location3.Id,
-            CategoryId = context.EventCategories.Skip(2).First().Id,
-            CreatedByUserId = context.Users.Skip(2).First().Id
-        };
-
-        context.Events.AddRange(event1, event2, event3);
+        // Wyczyszczenie bazy (opcjonalnie: tylko przy development!)
+        context.FavoriteEvents.RemoveRange(context.FavoriteEvents);
+        context.EventTags.RemoveRange(context.EventTags);
+        context.EventPhotos.RemoveRange(context.EventPhotos);
+        context.Events.RemoveRange(context.Events);
+        context.Tags.RemoveRange(context.Tags);
+        context.EventCategories.RemoveRange(context.EventCategories);
+        context.Locations.RemoveRange(context.Locations);
+        context.Users.RemoveRange(context.Users);
         context.SaveChanges();
 
-        // Tagowanie eventów
-        var tag1 = context.Tags.First();
-        var tag2 = context.Tags.Skip(1).First();
-        var tag3 = context.Tags.Skip(2).First();
+        // Użytkownicy
+        var users = new List<User>
+        {
+            new()
+            {
+                Username = "admin",
+                Email = "admin@diani.com",
+                Role = "admin",
+            },
+            new()
+            {
+                Username = "organizer1",
+                Email = "org1@diani.com",
+                Role = "organizer",
+            },
+            new()
+            {
+                Username = "user1",
+                Email = "user1@diani.com",
+                Role = "user",
+            },
+        };
+        context.Users.AddRange(users);
+        context.SaveChanges();
 
+        // Kategorie
+        var categories = new List<EventCategory>
+        {
+            new() { Name = "Beach Party" },
+            new() { Name = "Yoga" },
+            new() { Name = "Water Sports" },
+        };
+        context.EventCategories.AddRange(categories);
+        context.SaveChanges();
+
+        // Tagi
+        var tags = new List<Tag>
+        {
+            new() { Name = "Free" },
+            new() { Name = "Live Music" },
+            new() { Name = "Outdoor" },
+        };
+        context.Tags.AddRange(tags);
+        context.SaveChanges();
+
+        // Lokalizacje
+        var locations = new List<Location>
+        {
+            new() { Name = "Diani Beach Bar", Address = "Main Coastal Road" },
+            new() { Name = "Oceanfront Yoga Deck", Address = "Sunset Point" },
+            new() { Name = "Lagoon Surf Spot", Address = "Kite Bay" },
+        };
+        context.Locations.AddRange(locations);
+        context.SaveChanges();
+
+        var today = DateTime.UtcNow.Date;
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + 1); // Monday
+
+        // Eventy
+        var beachEvent = new Event
+        {
+            Title = "Beach Bar Chillout",
+            Description = "Afternoon beach bar session with chilled drinks and music.",
+            Date = startOfWeek.AddDays(5).AddHours(14), // Saturday 14:00
+            LocationId = locations[0].Id,
+            CategoryId = categories.First(c => c.Name == "Beach Party").Id,
+            CreatedByUserId = users[0].Id,
+        };
+
+        var yogaEvent = new Event
+        {
+            Title = "Sunset Yoga on the Beach",
+            Description = "Join us for a peaceful yoga flow at golden hour.",
+            Date = startOfWeek.AddDays(6).AddHours(18), // Sunday 18:00
+            LocationId = locations[1].Id,
+            CategoryId = categories.First(c => c.Name == "Yoga").Id,
+            CreatedByUserId = users[1].Id,
+        };
+
+        var kiteEvent = new Event
+        {
+            Title = "Kitesurfing Showcase",
+            Description = "Watch or join the local surfers flying across the waves.",
+            Date = startOfWeek.AddDays(2).AddHours(15), // Wednesday 15:00
+            LocationId = locations[2].Id,
+            CategoryId = categories.First(c => c.Name == "Water Sports").Id,
+            CreatedByUserId = users[2].Id,
+        };
+
+        context.Events.AddRange(beachEvent, yogaEvent, kiteEvent);
+        context.SaveChanges();
+
+        // Tagi do eventów
         context.EventTags.AddRange(
-            new EventTag { EventId = event1.Id, TagId = tag2.Id },
-            new EventTag { EventId = event2.Id, TagId = tag3.Id },
-            new EventTag { EventId = event3.Id, TagId = tag1.Id }
+            new EventTag { EventId = beachEvent.Id, TagId = tags[0].Id }, // Free
+            new EventTag { EventId = beachEvent.Id, TagId = tags[1].Id }, // Live Music
+            new EventTag { EventId = yogaEvent.Id, TagId = tags[2].Id }, // Outdoor
+            new EventTag { EventId = kiteEvent.Id, TagId = tags[0].Id }, // Free
+            new EventTag { EventId = kiteEvent.Id, TagId = tags[2].Id } // Outdoor
         );
 
-        // Dodanie zdjęć
+        // Zdjęcia do eventów
         context.EventPhotos.AddRange(
-            new EventPhoto { EventId = event1.Id, Url = "https://example.com/beach.jpg" },
-            new EventPhoto { EventId = event2.Id, Url = "https://example.com/yoga.jpg" },
-            new EventPhoto { EventId = event3.Id, Url = "https://example.com/mixer.jpg" }
-        );
-
-        // Ulubione eventy
-        var user1 = context.Users.First();
-        context.FavoriteEvents.AddRange(
-            new FavoriteEvent { UserId = user1.Id, EventId = event1.Id },
-            new FavoriteEvent { UserId = user1.Id, EventId = event2.Id }
+            new EventPhoto
+            {
+                EventId = beachEvent.Id,
+                Url = "/uploads/beach_bar_1.png",
+                IsMain = true,
+            },
+            new EventPhoto
+            {
+                EventId = beachEvent.Id,
+                Url = "/uploads/beach_bar_2.png",
+                IsMain = false,
+            },
+            new EventPhoto
+            {
+                EventId = yogaEvent.Id,
+                Url = "/uploads/yoga_sunset_1.png",
+                IsMain = true,
+            },
+            new EventPhoto
+            {
+                EventId = yogaEvent.Id,
+                Url = "/uploads/yoga_sunset_2.png",
+                IsMain = false,
+            },
+            new EventPhoto
+            {
+                EventId = kiteEvent.Id,
+                Url = "/uploads/kitesurf_1.png",
+                IsMain = true,
+            },
+            new EventPhoto
+            {
+                EventId = kiteEvent.Id,
+                Url = "/uploads/kitesurf_2.png",
+                IsMain = false,
+            },
+            new EventPhoto
+            {
+                EventId = kiteEvent.Id,
+                Url = "/uploads/kitesurf_2.png",
+                IsMain = false,
+            },
+            new EventPhoto
+            {
+                EventId = kiteEvent.Id,
+                Url = "/uploads/kitesurf_2.png",
+                IsMain = false,
+            }
         );
 
         context.SaveChanges();
