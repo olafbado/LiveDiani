@@ -80,4 +80,17 @@ public class EventPhotosController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdatePhotoUrl(int id, string newUrl)
+    {
+        var photo = await _context.EventPhotos.FindAsync(id);
+        if (photo == null)
+            return NotFound();
+
+        photo.Url = newUrl;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
