@@ -1,25 +1,22 @@
 const Colors = {
-  // Tła i karty
-  background: '#F5F5DC', // piaskowy
+  background: '#FFF3E0', // wanilia
   cardBackground: '#FFFFFF',
 
-  // Tekst i pomocnicze
-  text: '#5D4037', // safari brąz
+  text: '#4E342E', // ciemny kakaowy
   muted: '#8D6E63',
 
-  // Akcenty
-  primary: '#D84315', // terracotta
-  secondary: '#A1887F', // gliniasty brąz
-  danger: '#FF3B30',
-  success: '#8BC34A',
+  primary: '#FF7043', // pomarańczowy zachód
+  secondary: '#FFAB91', // łososiowy pastel
+  danger: '#E53935',
+  success: '#66BB6A',
   white: '#FFFFFF',
 
-  // Kategorie
   category: {
-    party: '#A1887F', // neutralny gliniany
-    yoga: '#C5E1A5', // naturalna zieleń
-    networking: '#FF7043', // pomarańczowe safari
+    party: '#FF8A65',
+    yoga: '#FFCC80',
+    networking: '#F48FB1',
   },
 };
+
 
 export default Colors;
