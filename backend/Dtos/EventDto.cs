@@ -8,6 +8,8 @@
 // ✅ Ułatwia walidację i modyfikację danych bez zmieniania modelu bazy
 // ✅ Uniezależnia strukturę API od struktury bazy danych
 
+using backend.Models;
+
 namespace backend.Dtos;
 
 public class EventDto
@@ -17,9 +19,11 @@ public class EventDto
     public string Description { get; set; } = "";
     public DateTime Date { get; set; }
     public int LocationId { get; set; }
+    public Location? Location { get; set; }
     public int CategoryId { get; set; }
     public int? CreatedByUserId { get; set; }
     public List<int> TagIds { get; set; } = new();
+    public List<Tag> Tags { get; set; } = new();
 
     public EventPhotoDto? MainPhoto { get; set; }
 
