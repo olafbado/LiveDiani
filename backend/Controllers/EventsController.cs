@@ -50,24 +50,51 @@ public class EventsController : ControllerBase
                 e.Photos?.Where(p => !p.IsMain)
                     .Select(p => new EventPhotoDto { Id = p.Id, Url = p.Url })
                     .ToList() ?? new List<EventPhotoDto>(),
-            // MainPhotoUrl = e.Photos?.FirstOrDefault(p => p.IsMain)?.Url,
-            // AdditionalPhotoUrls =
-            //     e.Photos?.Where(p => !p.IsMain).Select(p => p.Url).ToList() ?? new(),
         });
 
         return Ok(eventDtos);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Event>> GetEvent(int id)
+    public async Task<ActionResult<EventDto>> GetEvent(int id)
     {
         var ev = await _context
-            .Events.Include(e => e.EventTags)
+            .Events.Include(e => e.EventTags!)
+            .ThenInclude(et => et.Tag)
+            .Include(e => e.Location)
+            .Include(e => e.Category)
+            .Include(e => e.Photos)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (ev == null)
             return NotFound();
-        return ev;
+
+        var dto = new EventDto
+        {
+            Id = ev.Id,
+            Title = ev.Title,
+            Date = ev.Date,
+            Description = ev.Description,
+            LocationId = ev.LocationId,
+            Location = ev.Location,
+            Tags = ev.EventTags?.Select(et => et.Tag).ToList() ?? new List<Tag>(),
+            CategoryId = ev.CategoryId,
+            TagIds = ev.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>(),
+            MainPhoto =
+                ev.Photos?.FirstOrDefault(p => p.IsMain) != null
+                    ? new EventPhotoDto
+                    {
+                        Id = ev.Photos.First(p => p.IsMain).Id,
+                        Url = ev.Photos.First(p => p.IsMain).Url,
+                    }
+                    : null,
+            AdditionalPhotos =
+                ev.Photos?.Where(p => !p.IsMain)
+                    .Select(p => new EventPhotoDto { Id = p.Id, Url = p.Url })
+                    .ToList() ?? new List<EventPhotoDto>(),
+        };
+
+        return Ok(dto);
     }
 
     [HttpPost]
