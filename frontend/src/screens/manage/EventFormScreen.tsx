@@ -1,5 +1,16 @@
+import { ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+  Image,
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Colors from '../../constants/colors';
 import api from '../../api/axios';
@@ -19,6 +30,8 @@ export default function EventFormScreen() {
   const [locationId, setLocationId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [userId, setUserId] = useState('1');
+  const [mainImage, setMainImage] = useState<any>(null);
+  const [extraImages, setExtraImages] = useState<any[]>([]);
 
   const [locations, setLocations] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -26,6 +39,8 @@ export default function EventFormScreen() {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   useEffect(() => {
+    console.log('event');
+
     if (existingEvent) {
       setTitle(existingEvent.title);
       setDescription(existingEvent.description);
@@ -34,8 +49,23 @@ export default function EventFormScreen() {
       setCategoryId(String(existingEvent.categoryId));
       setUserId(String(existingEvent.createdByUserId));
 
-      if (existingEvent.tagIds) {
-        setSelectedTagIds(existingEvent.tagIds);
+      if (existingEvent.mainPhoto) {
+        console.log('Existing main image URL:', existingEvent.url);
+        setMainImage({
+          uri: 'http://192.168.1.36:5084' + existingEvent.mainPhoto.url,
+          id: existingEvent.mainPhoto.id,
+        });
+      }
+
+      if (existingEvent.additionalPhotos) {
+        console.log('Existing additional image URLs:', existingEvent.additionalPhotos);
+        const extras = existingEvent.additionalPhotos.map(
+          ({ url, id }: { url: string; id: number }) => ({
+            uri: 'http://192.168.1.36:5084' + url,
+            id: id,
+          }),
+        );
+        setExtraImages(extras);
       }
     }
 
@@ -47,6 +77,10 @@ export default function EventFormScreen() {
         setLocations(locs.data);
         setCategories(cats.data);
         setTags(tgs.data);
+
+        if (existingEvent?.tagIds) {
+          setSelectedTagIds(existingEvent.tagIds);
+        }
       } catch (err) {
         console.error('Fetch error:', err);
       }
@@ -61,9 +95,62 @@ export default function EventFormScreen() {
     );
   };
 
+  const pickImage = async (isMain: boolean) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'], // nowa forma
+      allowsEditing: false,
+      quality: 1,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
+
+      console.log('Picked image file URI:', asset.uri); // powinno być file://...
+
+      if (isMain) {
+        console.log('Picked main image file URI:', asset.uri);
+        setMainImage(asset);
+      } else {
+        console.log('Picked extra image file URI:', asset.uri);
+        setExtraImages((prev) => [...prev, asset]);
+      }
+    }
+  };
+
+  const uploadPhotos = async (eventId: number) => {
+    const upload = async (image: any, isMain: boolean) => {
+      if (image.uri.startsWith('http://') || image.uri.startsWith('https://')) return;
+      const formData = new FormData();
+
+      formData.append('image', {
+        uri: image.uri,
+        name: image.fileName || 'photo.jpg',
+        type: image.mimeType || 'image/jpeg',
+      } as any);
+
+      formData.append('eventId', String(eventId));
+      formData.append('isMain', String(isMain));
+
+      try {
+        const res = await api.post('/eventphotos/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        console.log('Upload OK:', res.data);
+      } catch (err) {
+        console.error('Upload failed:', err);
+      }
+    };
+
+    console.log('main image', mainImage);
+    if (mainImage) await upload(mainImage, true);
+    for (const img of extraImages) await upload(img, false);
+  };
+
   const handleSave = async () => {
-    if (!title || !locationId || !categoryId) {
-      Alert.alert('Validation', 'Please fill all required fields');
+    if (!title || !locationId || !categoryId || !mainImage) {
+      Alert.alert('Validation', 'Please fill all required fields and select a main image');
       return;
     }
 
@@ -77,14 +164,19 @@ export default function EventFormScreen() {
       tagIds: selectedTagIds,
     };
 
-    console.log('Sending payload:', payload);
-
     try {
+      let eventId = null;
+
       if (existingEvent) {
         await api.put(`/events/${existingEvent.id}`, { ...existingEvent, ...payload });
+        eventId = existingEvent.id;
       } else {
-        await api.post('/events', payload);
+        const res = await api.post('/events', payload);
+        eventId = res.data.id;
       }
+
+      if (eventId) await uploadPhotos(eventId);
+
       navigation.goBack();
     } catch (err) {
       console.error('Save failed:', err);
@@ -92,8 +184,20 @@ export default function EventFormScreen() {
     }
   };
 
+  const handleRemoveImage = async (index: number, id?: number) => {
+    if (id) {
+      try {
+        await api.delete(`/eventphotos/${id}`);
+      } catch (err) {
+        console.error('Failed to delete image:', err);
+      }
+    }
+    console.log('Deleting image with ID:', id);
+    setExtraImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.label}>Title</Text>
       <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
@@ -155,15 +259,58 @@ export default function EventFormScreen() {
         ))}
       </View>
 
+      <Text style={styles.label}>Main Image</Text>
+      <TouchableOpacity style={styles.imagePicker} onPress={() => pickImage(true)}>
+        {mainImage ? (
+          <Image source={{ uri: mainImage.uri }} style={styles.image} />
+        ) : (
+          <Text>Select Main Image</Text>
+        )}
+      </TouchableOpacity>
+
+      <Text style={styles.label}>Extra Images</Text>
+      <TouchableOpacity style={styles.imagePicker} onPress={() => pickImage(false)}>
+        <Text>Select Additional Images</Text>
+      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        {extraImages.map((img, idx) => (
+          <View key={idx} style={{ position: 'relative', margin: 4 }}>
+            <Image source={{ uri: img.uri }} style={styles.thumbnail} />
+            <TouchableOpacity
+              onPress={() => handleRemoveImage(idx, img.id)}
+              style={styles.deleteButton}
+            >
+              <Text style={styles.deleteButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+
       <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>{existingEvent ? 'Update Event' : 'Create Event'}</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: Colors.background, flex: 1 },
+  deleteButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  container: { padding: 16, backgroundColor: Colors.background, flexGrow: 1 },
   label: { color: Colors.text, marginBottom: 8, fontWeight: 'bold' },
   input: {
     backgroundColor: Colors.cardBackground,
@@ -203,4 +350,13 @@ const styles = StyleSheet.create({
   tagTextSelected: {
     color: Colors.white,
   },
+  imagePicker: {
+    backgroundColor: Colors.cardBackground,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  image: { width: '100%', height: 200, borderRadius: 8 },
+  thumbnail: { width: 80, height: 80, margin: 4, borderRadius: 8 },
 });

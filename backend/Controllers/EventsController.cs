@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
 using backend.Data;
-using backend.Models;
-using Microsoft.EntityFrameworkCore;
 using backend.Dtos;
+using backend.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
@@ -21,11 +21,12 @@ public class EventsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EventDto>>> GetEvents()
     {
-        var events = await _context.Events
-            .Include(e => e.EventTags!)
+        var events = await _context
+            .Events.Include(e => e.EventTags!)
             .ThenInclude(et => et.Tag)
             .Include(e => e.Location)
             .Include(e => e.Category)
+            .Include(e => e.Photos)
             .ToListAsync();
 
         var eventDtos = events.Select(e => new EventDto
@@ -37,20 +38,35 @@ public class EventsController : ControllerBase
             LocationId = e.LocationId,
             CategoryId = e.CategoryId,
             TagIds = e.EventTags?.Select(et => et.TagId).ToList() ?? new List<int>(),
+            MainPhoto =
+                e.Photos?.FirstOrDefault(p => p.IsMain) != null
+                    ? new EventPhotoDto
+                    {
+                        Id = e.Photos.FirstOrDefault(p => p.IsMain)!.Id,
+                        Url = e.Photos.FirstOrDefault(p => p.IsMain)!.Url,
+                    }
+                    : null,
+            AdditionalPhotos =
+                e.Photos?.Where(p => !p.IsMain)
+                    .Select(p => new EventPhotoDto { Id = p.Id, Url = p.Url })
+                    .ToList() ?? new List<EventPhotoDto>(),
+            // MainPhotoUrl = e.Photos?.FirstOrDefault(p => p.IsMain)?.Url,
+            // AdditionalPhotoUrls =
+            //     e.Photos?.Where(p => !p.IsMain).Select(p => p.Url).ToList() ?? new(),
         });
 
         return Ok(eventDtos);
     }
 
-
     [HttpGet("{id}")]
     public async Task<ActionResult<Event>> GetEvent(int id)
     {
-        var ev = await _context.Events
-            .Include(e => e.EventTags)
+        var ev = await _context
+            .Events.Include(e => e.EventTags)
             .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (ev == null) return NotFound();
+        if (ev == null)
+            return NotFound();
         return ev;
     }
 
@@ -66,16 +82,18 @@ public class EventsController : ControllerBase
             LocationId = dto.LocationId,
             CategoryId = dto.CategoryId,
             CreatedByUserId = dto.CreatedByUserId,
-            EventTags = new List<EventTag>() // dodaj pustą listę i ręcznie powiąż tagi
+            EventTags = new List<EventTag>(), // dodaj pustą listę i ręcznie powiąż tagi
         };
 
         foreach (var tagId in dto.TagIds)
         {
-            ev.EventTags.Add(new EventTag
-            {
-                TagId = tagId,
-                Event = ev // <== to jest KLUCZOWE, żeby EF wiedział o relacji
-            });
+            ev.EventTags.Add(
+                new EventTag
+                {
+                    TagId = tagId,
+                    Event = ev, // <== to jest KLUCZOWE, żeby EF wiedział o relacji
+                }
+            );
         }
 
         _context.Events.Add(ev);
@@ -84,17 +102,18 @@ public class EventsController : ControllerBase
         return CreatedAtAction(nameof(GetEvent), new { id = ev.Id }, ev);
     }
 
-
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateEvent(int id, EventDto dto)
     {
-        if (id != dto.Id) return BadRequest("ID mismatch");
+        if (id != dto.Id)
+            return BadRequest("ID mismatch");
 
-        var ev = await _context.Events
-            .Include(e => e.EventTags)
+        var ev = await _context
+            .Events.Include(e => e.EventTags)
             .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (ev == null) return NotFound();
+        if (ev == null)
+            return NotFound();
 
         ev.Title = dto.Title;
         ev.Description = dto.Description;
@@ -106,13 +125,10 @@ public class EventsController : ControllerBase
         // Usuń stare tagi
         _context.EventTags.RemoveRange(ev.EventTags ?? Enumerable.Empty<EventTag>());
 
-
         // Dodaj nowe tagi
-        ev.EventTags = dto.TagIds.Select(tagId => new EventTag
-        {
-            TagId = tagId,
-            EventId = id
-        }).ToList();
+        ev.EventTags = dto
+            .TagIds.Select(tagId => new EventTag { TagId = tagId, EventId = id })
+            .ToList();
 
         await _context.SaveChangesAsync();
         return NoContent();
@@ -121,11 +137,12 @@ public class EventsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEvent(int id)
     {
-        var ev = await _context.Events
-            .Include(e => e.EventTags)
+        var ev = await _context
+            .Events.Include(e => e.EventTags)
             .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (ev == null) return NotFound();
+        if (ev == null)
+            return NotFound();
 
         _context.EventTags.RemoveRange(ev.EventTags ?? Enumerable.Empty<EventTag>());
         _context.Events.Remove(ev);

@@ -21,20 +21,22 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<any>();
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await api.get('/events');
-        console.log('Fetched:', res.data); // sprawdź, czy to tablica
-        setEvents(res.data); // ✅ poprawnie ustaw dane
-      } catch (err) {
-        console.error('Failed to load events:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEvents();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchEvents = async () => {
+        try {
+          const res = await api.get('/events');
+          console.log('Fetched:', res.data); // sprawdź, czy to tablica
+          setEvents(res.data); // ✅ poprawnie ustaw dane
+        } catch (err) {
+          console.error('Failed to load events:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchEvents();
+    }, []),
+  );
 
   const weekDays = eachDayOfInterval({
     start: startOfWeek(new Date(), { weekStartsOn: 1 }),

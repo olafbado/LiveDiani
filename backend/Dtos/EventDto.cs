@@ -20,4 +20,14 @@ public class EventDto
     public int CategoryId { get; set; }
     public int? CreatedByUserId { get; set; }
     public List<int> TagIds { get; set; } = new();
+
+    public EventPhotoDto? MainPhoto { get; set; }
+
+    public List<EventPhotoDto> AdditionalPhotos { get; set; } = new();
+}
+
+public class EventPhotoDto
+{
+    public int Id { get; set; }
+    public string Url { get; set; } = string.Empty;
 }
