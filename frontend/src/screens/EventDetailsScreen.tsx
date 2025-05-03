@@ -79,7 +79,7 @@ export default function EventDetailsScreen() {
         keyExtractor={(item, idx) => idx.toString()}
         renderItem={({ item }) => (
           <Image
-            source={{ uri: 'http://192.168.1.36:5084' + item.url }}
+            source={{ uri: 'http://work-1-tttjawtuglcpntpt.prod-runtime.all-hands.dev:12002' + item.url }}
             style={styles.sliderImage}
           />
         )}
@@ -96,7 +96,7 @@ export default function EventDetailsScreen() {
           {images.map((img, idx) => (
             <TouchableOpacity key={idx} onPress={() => scrollToIndex(idx)}>
               <Image
-                source={{ uri: 'http://192.168.1.36:5084' + img.url }}
+                source={{ uri: 'http://work-1-tttjawtuglcpntpt.prod-runtime.all-hands.dev:12002' + img.url }}
                 style={[styles.thumbnail, idx === activeIndex && styles.thumbnailSelected]}
               />
             </TouchableOpacity>

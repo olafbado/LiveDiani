@@ -108,7 +108,7 @@ export default function EventsByDayScreen() {
             >
               <Image
                 source={{
-                  uri: 'http://192.168.1.36:5084' + event.mainPhoto?.url,
+                  uri: 'http://work-1-tttjawtuglcpntpt.prod-runtime.all-hands.dev:12002' + event.mainPhoto?.url,
                 }}
                 style={styles.image}
               />

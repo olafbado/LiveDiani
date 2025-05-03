@@ -49,12 +49,9 @@ var app = builder.Build();
 // 🔓 Włączamy CORS
 app.UseCors();
 
-// 🧪 W środowisku developerskim włączamy Swagger UI
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// 🧪 Włączamy Swagger UI w każdym środowisku
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // 🔄 Przekierowanie na HTTPS – obecnie zakomentowane (opcjonalne)
 // app.UseHttpsRedirection();
@@ -73,7 +70,7 @@ using (var scope = app.Services.CreateScope())
     DbSeeder.Seed(db); // zasiewanie bazy danymi testowymi
 }
 
-// ▶️ Startujemy aplikację – nasłuch na domyślnym porcie
+// ▶️ Startujemy aplikację – nasłuch na porcie 12000
 app.UseStaticFiles();
 app.MapControllers();
 app.Run();
