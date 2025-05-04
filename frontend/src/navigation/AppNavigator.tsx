@@ -9,6 +9,7 @@ import ManageStack from './ManageStack';
 import ProfileScreen from '../screens/ProfileScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
+import FavoritesScreen from '../screens/FavoritesScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,7 +38,6 @@ export default function AppNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.muted,
         tabBarStyle: {
@@ -48,19 +48,18 @@ export default function AppNavigator() {
           let iconName = 'home';
           if (route.name === 'Home') iconName = 'home';
           if (route.name === 'Manage') iconName = 'settings';
+          if (route.name === 'Favorites') iconName = 'heart';
+          if (route.name === 'Profile') iconName = 'person';
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} />
-      {role === 'admin' && <Tab.Screen name="Manage" component={ManageStack} />}
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
-        }}
-      />
+      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
+      {role === 'admin' && (
+        <Tab.Screen name="Manage" component={ManageStack} options={{ headerShown: false }} />
+      )}
+      <Tab.Screen name="Favorites" component={FavoritesScreen} options={{ title: 'Favorites' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 }

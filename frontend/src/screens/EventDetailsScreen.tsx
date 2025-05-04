@@ -14,6 +14,8 @@ import Colors from '../constants/colors';
 import api from '../api/axios';
 import { useEffect, useRef, useState } from 'react';
 import { parseISO, format } from 'date-fns';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function EventDetailsScreen() {
   const route = useRoute<any>();
@@ -25,32 +27,40 @@ export default function EventDetailsScreen() {
   const screenWidth = Dimensions.get('window').width;
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const toggleFavorite = async () => {
+    try {
+      if (isFavorite) {
+        await api.delete(`/favorites/${event.id}`);
+      } else {
+        await api.post(`/favorites/${event.id}`);
+      }
+      setIsFavorite(!isFavorite);
+    } catch (err) {
+      console.error('Toggle favorite failed:', err);
+    }
+  };
 
   useEffect(() => {
-    const fetchEvent = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get(`/events/${eventId}`);
-        setEvent(res.data);
+        const [eventRes, favRes] = await Promise.all([
+          api.get(`/events/${eventId}`),
+          api.get(`/favorites/check/${eventId}`),
+        ]);
+        setEvent(eventRes.data);
+        setIsFavorite(favRes.data.isFavorite);
       } catch (err) {
-        console.error('Error fetching event:', err);
+        console.error('Error fetching event or favorite status:', err);
         setError(true);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEvent();
+    fetchData();
   }, [eventId]);
-
-  const images = [
-    ...(event?.mainPhoto ? [event.mainPhoto] : []),
-    ...(event?.additionalPhotos || []),
-  ];
-
-  const scrollToIndex = (index: number) => {
-    flatListRef.current?.scrollToIndex({ index, animated: true });
-    setActiveIndex(index);
-  };
 
   if (loading) {
     return (
@@ -68,9 +78,15 @@ export default function EventDetailsScreen() {
     );
   }
 
+  const images = [...(event.mainPhoto ? [event.mainPhoto] : []), ...(event.additionalPhotos || [])];
+
+  const scrollToIndex = (index: number) => {
+    flatListRef.current?.scrollToIndex({ index, animated: true });
+    setActiveIndex(index);
+  };
+
   return (
     <ScrollView style={{ backgroundColor: Colors.background }}>
-      {/* Główne zdjęcie + slider */}
       <FlatList
         ref={flatListRef}
         data={images}
@@ -90,7 +106,6 @@ export default function EventDetailsScreen() {
         }}
       />
 
-      {/* Miniaturki */}
       {images.length > 1 && (
         <View style={styles.thumbnailRow}>
           {images.map((img, idx) => (
@@ -104,8 +119,14 @@ export default function EventDetailsScreen() {
         </View>
       )}
 
-      {/* Szczegóły */}
       <View style={styles.content}>
+        <TouchableOpacity
+          onPress={toggleFavorite}
+          style={{ position: 'absolute', top: -10, right: 10, zIndex: 10 }}
+        >
+          <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={28} color="red" />
+        </TouchableOpacity>
+
         <Text style={styles.title}>{event.title}</Text>
         <Text style={styles.detail}>📅 {format(parseISO(event.date), 'dd MMM yyyy, HH:mm')}</Text>
         {event.location && <Text style={styles.detail}>📍 {event.location.name}</Text>}
@@ -192,6 +213,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginRight: 6,
     marginBottom: 6,
+    color: Colors.white,
   },
   center: {
     flex: 1,

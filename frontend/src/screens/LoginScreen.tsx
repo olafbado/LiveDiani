@@ -13,9 +13,11 @@ export default function LoginScreen({ navigation }: any) {
       const res = await api.post('/auth/login', { email, password });
       const token = res.data.token;
       const role = res.data.role;
+      const userId = res.data.userId;
 
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('role', role);
+      await AsyncStorage.setItem('userId', userId);
 
       navigation.reset({
         index: 0,
