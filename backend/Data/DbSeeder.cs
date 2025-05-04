@@ -107,7 +107,7 @@ public static class DbSeeder
             Date = startOfWeek.AddDays(2).AddHours(15), // Wednesday 15:00
             LocationId = locations[2].Id,
             CategoryId = categories.First(c => c.Name == "Water Sports").Id,
-            CreatedByUserId = users[2].Id,
+            CreatedByUserId = users[1].Id,
         };
 
         context.Events.AddRange(beachEvent, yogaEvent, kiteEvent);
