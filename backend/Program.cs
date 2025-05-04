@@ -1,9 +1,12 @@
-using System.Text.Json.Serialization;
+using System.Text;
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 // 🔧 Tworzymy builder aplikacji ASP.NET Core
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+var secretKey = config["JwtSettings:SecretKey"];
 
 // ✅ Dodajemy usługi do kontenera DI (Dependency Injection)
 
@@ -43,8 +46,33 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // 🗄️ Rejestrujemy DbContext z PostgreSQL jako providerem
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
+builder
+    .Services.AddAuthentication("Bearer")
+    .AddJwtBearer(
+        "Bearer",
+        options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+                ),
+            };
+        }
+    );
+builder.Services.AddAuthorization();
+
 // 🏗️ Budujemy aplikację na podstawie skonfigurowanego buildera
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // 🔓 Włączamy CORS
 app.UseCors();
