@@ -1,4 +1,5 @@
 using backend.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace backend.Data;
 
@@ -17,28 +18,29 @@ public static class DbSeeder
         context.Users.RemoveRange(context.Users);
         context.SaveChanges();
 
-        // Użytkownicy
+        var passwordHasher = new PasswordHasher<User>();
+
         var users = new List<User>
         {
             new()
             {
                 Username = "admin",
-                Email = "admin@diani.com",
+                Email = "admin@admin.com",
                 Role = "admin",
             },
             new()
             {
-                Username = "organizer1",
-                Email = "org1@diani.com",
-                Role = "organizer",
-            },
-            new()
-            {
-                Username = "user1",
-                Email = "user1@diani.com",
+                Username = "user",
+                Email = "user@user.com",
                 Role = "user",
             },
         };
+
+        foreach (var user in users)
+        {
+            user.PasswordHash = passwordHasher.HashPassword(user, "123");
+        }
+
         context.Users.AddRange(users);
         context.SaveChanges();
 
@@ -73,7 +75,9 @@ public static class DbSeeder
         context.SaveChanges();
 
         var today = DateTime.UtcNow.Date;
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek + 1); // Monday
+        var startOfWeek = today.AddDays(
+            -((int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1)
+        );
 
         // Eventy
         var beachEvent = new Event
