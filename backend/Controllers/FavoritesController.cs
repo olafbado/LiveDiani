@@ -51,9 +51,14 @@ public class FavoritesController : ControllerBase
             LocationId = e.LocationId,
             CategoryId = e.CategoryId,
             TagIds = e.EventTags!.Select(et => et.TagId).ToList(),
-            MainPhoto = e.Photos?.FirstOrDefault(p => p.IsMain) is { } main
-                ? new EventPhotoDto { Id = main.Id, Url = main.Url }
-                : null,
+            MainPhoto =
+                e.Photos?.FirstOrDefault(p => p.IsMain) != null
+                    ? new EventPhotoDto
+                    {
+                        Id = e.Photos.FirstOrDefault(p => p.IsMain)!.Id,
+                        Url = e.Photos.FirstOrDefault(p => p.IsMain)!.Url,
+                    }
+                    : null,
             AdditionalPhotos =
                 e.Photos?.Where(p => !p.IsMain)
                     .Select(p => new EventPhotoDto { Id = p.Id, Url = p.Url })
