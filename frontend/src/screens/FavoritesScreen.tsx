@@ -57,7 +57,7 @@ export default function FavoritesScreen() {
             onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
           >
             <Image
-              source={{ uri: 'http://localhost:5084' + item.mainPhoto?.url }}
+              source={{ uri: 'http://192.168.1.36:5084' + item.mainPhoto?.url }}
               style={styles.image}
             />
             <Text style={styles.title}>{item.title}</Text>
