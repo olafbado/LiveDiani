@@ -1,11 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ManageDashboardScreen from '../screens/manage/ManageDashboardScreen';
-
-// import ManageEventsScreen from '../screens/manage/ManageEventsScreen';
 import ManageLocationsScreen from '../screens/manage/ManageLocationsScreen';
 import ManageCategoriesScreen from '../screens/manage/ManageCategoriesScreen';
 import ManageTagsScreen from '../screens/manage/ManageTagsScreen';
-// import EventFormScreen from '../screens/manage/EventFormScreen';
 import TagFormScreen from '../screens/manage/TagFormScreen';
 import CategoryFormScreen from '../screens/manage/CategoryFormScreen';
 import LocationFormScreen from '../screens/manage/LocationFormScreen';
