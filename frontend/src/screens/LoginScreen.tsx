@@ -13,7 +13,7 @@ export default function LoginScreen({ navigation }: any) {
       const res = await api.post('/auth/login', { email, password });
       const token = res.data.token;
       const role = res.data.role;
-      const userId = res.data.userId;
+      const userId = res.data.userId.toString();
 
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('role', role);

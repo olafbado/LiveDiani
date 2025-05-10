@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using backend.Data;
 using backend.Dtos;
 using backend.Models;
@@ -15,6 +16,11 @@ public class EventsController : ControllerBase
     public EventsController(AppDbContext context)
     {
         _context = context;
+    }
+
+    private int GetUserId()
+    {
+        return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     }
 
     [HttpGet]
@@ -100,7 +106,12 @@ public class EventsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Event>> CreateEvent(EventDto dto)
     {
-        Console.WriteLine("Received tagIds: " + string.Join(", ", dto.TagIds));
+        // print dto
+        Console.WriteLine(
+            $"DTO: {dto.Id}, {dto.Title}, {dto.Description}, {dto.Date}, {dto.LocationId}, {dto.CategoryId}"
+        );
+        var userId = GetUserId();
+
         var ev = new Event
         {
             Title = dto.Title,
@@ -108,19 +119,13 @@ public class EventsController : ControllerBase
             Date = dto.Date,
             LocationId = dto.LocationId,
             CategoryId = dto.CategoryId,
-            CreatedByUserId = dto.CreatedByUserId,
-            EventTags = new List<EventTag>(), // dodaj pustą listę i ręcznie powiąż tagi
+            CreatedByUserId = userId,
+            EventTags = new List<EventTag>(),
         };
 
         foreach (var tagId in dto.TagIds)
         {
-            ev.EventTags.Add(
-                new EventTag
-                {
-                    TagId = tagId,
-                    Event = ev, // <== to jest KLUCZOWE, żeby EF wiedział o relacji
-                }
-            );
+            ev.EventTags.Add(new EventTag { TagId = tagId, Event = ev });
         }
 
         _context.Events.Add(ev);

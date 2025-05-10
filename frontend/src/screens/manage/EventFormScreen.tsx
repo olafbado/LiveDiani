@@ -160,7 +160,6 @@ export default function EventFormScreen() {
       date: pickedDate.toISOString(),
       locationId: parseInt(locationId),
       categoryId: parseInt(categoryId),
-      createdByUserId: parseInt(userId),
       tagIds: selectedTagIds,
     };
 
