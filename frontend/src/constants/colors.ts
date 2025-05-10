@@ -1,12 +1,12 @@
 const Colors = {
-  background: '#FFF3E0', // wanilia
+  background: '#FFF3E0', 
   cardBackground: '#FFFFFF',
 
-  text: '#4E342E', // ciemny kakaowy
+  text: '#4E342E', 
   muted: '#8D6E63',
 
-  primary: '#FF7043', // pomarańczowy zachód
-  secondary: '#FFAB91', // łososiowy pastel
+  primary: '#FF7043', 
+  secondary: '#FFAB91', 
   danger: '#E53935',
   success: '#66BB6A',
   white: '#FFFFFF',
