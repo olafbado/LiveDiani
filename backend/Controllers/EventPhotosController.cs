@@ -70,11 +70,6 @@ public class EventPhotosController : ControllerBase
         if (photo == null)
             return NotFound();
 
-        // Usuń fizyczny plik
-        var fullPath = Path.Combine(_env.WebRootPath, photo.Url.TrimStart('/'));
-        if (System.IO.File.Exists(fullPath))
-            System.IO.File.Delete(fullPath);
-
         _context.EventPhotos.Remove(photo);
         await _context.SaveChangesAsync();
 
