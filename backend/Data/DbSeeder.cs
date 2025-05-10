@@ -7,7 +7,6 @@ public static class DbSeeder
 {
     public static void Seed(AppDbContext context)
     {
-        // Wyczyszczenie bazy (opcjonalnie: tylko przy development!)
         context.FavoriteEvents.RemoveRange(context.FavoriteEvents);
         context.EventTags.RemoveRange(context.EventTags);
         context.EventPhotos.RemoveRange(context.EventPhotos);
